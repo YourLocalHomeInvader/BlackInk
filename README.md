@@ -1,2 +1,2 @@
 # BlackInk
-basically a website with encryption and messaging
+This is a project I was working on for a few weeks cause i was bored lmaooo; it's basically a website with encryption and messaging. I put example endpoints and photos and videos in the admin account (User: YourLocalHomeInvader | Password: Bubba138# | Bubba138#). I figure that someone might like this, or they are practicing breaking into shit lmao; it's not the best, but it's something lmaoo.
