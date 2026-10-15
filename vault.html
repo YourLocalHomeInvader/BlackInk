@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Ink Network | Secure Encrypted Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #050507; color: #e4e4e7; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        .glass-panel { background: rgba(12, 12, 16, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #050507; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <header class="border-b border-white/10 bg-black/80 backdrop-blur-xl h-16 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="text-zinc-400 hover:text-white transition flex items-center gap-2 text-xs font-mono pr-2 border-r border-white/10">
+                    <i class="fa-solid fa-arrow-left"></i> Dashboard
+                </a>
+                <div class="h-8 w-8 rounded-lg bg-black border border-white/20 flex flex-col items-center justify-center">
+                    <span class="font-black text-white text-[10px]">BIN</span>
+                </div>
+                <h1 class="font-bold text-white text-sm tracking-wider flex items-center gap-2">
+                    ENCRYPTED ACCOUNT VAULT
+                    <span class="text-[8px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AES-GCM SECURED</span>
+                </h1>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span id="userAccountBadge">--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- INLINE VIEWER WORKSPACE -->
+        <section id="inlineViewerSection" class="hidden">
+            <div class="glass-panel rounded-2xl p-6 relative border border-emerald-500/30 shadow-2xl space-y-4">
+                <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-unlock-keyhole text-emerald-400"></i>
+                        <h3 class="font-bold text-white text-sm" id="inlineViewerTitle">Decrypted View Workspace</h3>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <a id="inlineDownloadBtn" href="" download class="text-xs font-mono bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg border border-white/10 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> Download File
+                        </a>
+                        <button onclick="closeInlineViewer()" class="text-zinc-400 hover:text-white p-1" title="Close Workspace"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                </div>
+                <div class="w-full min-h-[300px] max-h-[70vh] flex items-center justify-center bg-black/60 rounded-xl overflow-hidden p-2" id="inlineViewerContainer"></div>
+            </div>
+        </section>
+
+        <section class="relative">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2"><i class="fa-solid fa-vault text-white"></i> Secure Storage Vault</h2>
+                <div class="flex items-center space-x-3 text-xs font-mono">
+                    <span id="vaultUsageText" class="text-zinc-400">150 GB Storage Tier</span>
+                    <button id="relockBtn" onclick="lockVault()" class="hidden text-zinc-400 hover:text-red-400 transition"><i class="fa-solid fa-lock"></i> Lock Vault</button>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-6 relative overflow-hidden" id="vaultContainer">
+                <div id="vaultLockOverlay" class="absolute inset-0 z-30 bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                    <div class="h-16 w-16 rounded-2xl bg-black border border-white/20 flex flex-col items-center justify-center mb-4 shadow-2xl">
+                        <span class="font-black text-white text-lg">BIN</span>
+                        <span class="text-[7px] text-zinc-400 font-mono">SECURE</span>
+                    </div>
+                    <h3 id="vaultLockTitle" class="text-lg font-bold text-white mb-1">Protected Account Vault</h3>
+                    <p id="vaultLockDesc" class="text-xs text-zinc-400 mb-4 max-w-sm">Enter your vault passphrase to unlock encrypted storage.</p>
+                    <form onsubmit="handleVaultFormSubmit(event)" class="flex flex-col sm:flex-row items-center gap-2 w-full max-w-xs">
+                        <input type="password" id="vaultPassInput" placeholder="Vault Passphrase" class="w-full bg-zinc-900 border border-white/20 rounded-xl px-4 py-2 text-sm text-white focus:outline-none font-mono text-center">
+                        <button type="submit" id="vaultSubmitBtn" class="w-full sm:w-auto bg-white hover:bg-zinc-200 text-black font-semibold text-sm px-5 py-2 rounded-xl transition">Unlock</button>
+                    </form>
+                    <p id="lockErrorText" class="text-xs text-red-400 font-mono mt-2 hidden">Invalid Passphrase</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                            <h3 id="mediaCountText" class="text-xs font-bold uppercase text-zinc-300 flex items-center gap-2"><i class="fa-solid fa-photo-film text-white"></i> Encrypted Media Gallery</h3>
+                            <button onclick="triggerMediaUpload()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3 py-1 rounded-lg text-xs font-mono transition"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Media</button>
+                            <input type="file" id="mediaFileInput" accept="image/*,video/*" class="hidden" onchange="handleVaultUpload(this.files)">
+                        </div>
+                        <div id="mediaGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            <div class="col-span-full py-8 text-center text-zinc-500 text-xs font-mono">Vault locked.</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-white/10">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase text-zinc-300 flex items-center gap-2"><i class="fa-solid fa-file-lines text-white"></i> Encrypted Files</h3>
+                            <button onclick="triggerFileUpload()" class="text-xs font-mono bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3 py-1 rounded-lg transition"><i class="fa-solid fa-upload"></i> Upload File</button>
+                            <input type="file" id="vaultFileInput" class="hidden" onchange="handleVaultUpload(this.files)">
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-white/10 text-xs font-mono uppercase text-zinc-400">
+                                        <th class="py-3 px-4">Filename</th>
+                                        <th class="py-3 px-4">Size</th>
+                                        <th class="py-3 px-4">Date Added</th>
+                                        <th class="py-3 px-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vaultFileTable" class="divide-y divide-white/5 text-sm font-mono text-zinc-300">
+                                    <tr><td colspan="4" class="py-6 text-center text-zinc-500">Vault locked.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ENCRYPT PROGRESS MODAL -->
+    <div id="encryptModal" class="fixed inset-0 z-[85] bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-6 text-center space-y-4 shadow-2xl border border-emerald-500/30">
+            <div class="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                <i class="fa-solid fa-lock text-lg animate-pulse"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-sm mb-1" id="encryptStatusTitle">Encrypting Payload...</h3>
+                <p class="text-xs text-zinc-400 font-mono truncate" id="encryptFileName">Preparing stream</p>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-2.5 overflow-hidden border border-white/10">
+                <div id="encryptProgressBar" class="bg-emerald-400 h-2.5 rounded-full transition-all duration-75" style="width: 0%"></div>
+            </div>
+            <div class="text-[11px] font-mono text-zinc-400" id="encryptProgressPercent">0%</div>
+        </div>
+    </div>
+
+    <!-- DECRYPT PROGRESS MODAL -->
+    <div id="decryptModal" class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-6 text-center space-y-4 shadow-2xl border border-white/20">
+            <div class="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                <i class="fa-solid fa-unlock-keyhole text-lg animate-pulse"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-sm mb-1" id="decryptStatusTitle">Decrypting Payload...</h3>
+                <p class="text-xs text-zinc-400 font-mono truncate" id="decryptFileName">Processing file stream</p>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-2.5 overflow-hidden border border-white/10">
+                <div id="decryptProgressBar" class="bg-emerald-400 h-2.5 rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div class="text-[11px] font-mono text-zinc-400" id="decryptProgressPercent">0%</div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_SECRET = "BIN_SECURE_KEY_2026_!@#$";
+        const API_URL = 'api.php';
+        let currentUser = localStorage.getItem('bin_active_user') || null;
+        let vaultUnlocked = false;
+        let userHasVaultPass = false;
+
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        async function getKey() {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw", enc.encode(MASTER_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]
+            );
+            return window.crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: enc.encode("bin_salt_value"), iterations: 100000, hash: "SHA-256" },
+                keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+            );
+        }
+
+        async function decryptFileBuffer(arrayBuffer, onProgress) {
+            if (onProgress) onProgress(20, "Deriving decryption keys...");
+            const key = await getKey();
+            if (onProgress) onProgress(50, "Parsing cipher blocks...");
+            const view = new DataView(arrayBuffer);
+            const ivLen = view.getUint32(0, true);
+            const iv = new Uint8Array(arrayBuffer, 4, ivLen);
+            const ciphertext = new Uint8Array(arrayBuffer, 4 + ivLen);
+            if (onProgress) onProgress(80, "Unlocking payload stream...");
+            const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+            if (onProgress) onProgress(100, "Decryption complete!");
+            return decrypted;
+        }
+
+        async function encryptFileBuffer(arrayBuffer, onProgress) {
+            if (onProgress) onProgress(15, "Deriving encryption keys...");
+            const key = await getKey();
+            if (onProgress) onProgress(30, "Generating secure initialization vectors...");
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            if (onProgress) onProgress(45, "Applying AES-GCM cipher blocks...");
+            const encryptedContent = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, arrayBuffer);
+            const ivLen = iv.byteLength;
+            const combined = new Uint8Array(4 + ivLen + encryptedContent.byteLength);
+            new DataView(combined.buffer).setUint32(0, ivLen, true);
+            combined.set(iv, 4);
+            combined.set(new Uint8Array(encryptedContent), 4 + ivLen);
+            if (onProgress) onProgress(50, "Encryption complete!");
+            return combined.buffer;
+        }
+
+        function getRealExtension(filename) {
+            let clean = filename.toLowerCase();
+            if (clean.endsWith('.enc')) clean = clean.slice(0, -4);
+            return clean.split('.').pop();
+        }
+
+        async function openDecryptedMediaModal(fileUrl, fileName) {
+            const decryptModal = document.getElementById('decryptModal');
+            const progressBar = document.getElementById('decryptProgressBar');
+            const progressPercent = document.getElementById('decryptProgressPercent');
+            const fileLabel = document.getElementById('decryptFileName');
+
+            decryptModal.classList.remove('hidden');
+            fileLabel.textContent = fileName;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+
+            try {
+                const response = await fetch(fileUrl);
+                const arrayBuffer = await response.arrayBuffer();
+
+                const decryptedBuffer = await decryptFileBuffer(arrayBuffer, (pct, statusText) => {
+                    progressBar.style.width = pct + '%';
+                    progressPercent.textContent = pct + '%';
+                    document.getElementById('decryptStatusTitle').textContent = statusText;
+                });
+
+                decryptModal.classList.add('hidden');
+
+                const ext = getRealExtension(fileName);
+                let mimeType = 'application/octet-stream';
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+                else if (['mp4', 'webm', 'ogg'].includes(ext)) mimeType = `video/${ext}`;
+                else if (ext === 'pdf') mimeType = 'application/pdf';
+
+                const blob = new Blob([decryptedBuffer], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+
+                const inlineViewer = document.getElementById('inlineViewerSection');
+                const container = document.getElementById('inlineViewerContainer');
+                document.getElementById('inlineViewerTitle').textContent = `Decrypted Workspace: ${fileName}`;
+                document.getElementById('inlineDownloadBtn').href = blobUrl;
+                document.getElementById('inlineDownloadBtn').download = fileName.endsWith('.enc') ? fileName.slice(0, -4) : fileName;
+
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+                    container.innerHTML = `<img src="${blobUrl}" class="max-h-[65vh] rounded-lg shadow-xl object-contain">`;
+                } else if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                    container.innerHTML = `<video controls autoplay class="max-h-[65vh] rounded-lg shadow-xl"><source src="${blobUrl}" type="${mimeType}"></video>`;
+                } else if (ext === 'pdf') {
+                    container.innerHTML = `<iframe src="${blobUrl}" class="w-full h-[60vh] rounded-lg border border-white/10"></iframe>`;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-12 space-y-4 font-mono">
+                            <i class="fa-solid fa-file-shield text-4xl text-emerald-400"></i>
+                            <p class="text-xs text-zinc-300">File decrypted successfully. Click below to download.</p>
+                            <a href="${blobUrl}" download="${fileName}" class="inline-block bg-white text-black font-semibold text-xs px-4 py-2 rounded-xl">Download Decrypted File</a>
+                        </div>
+                    `;
+                }
+                inlineViewer.classList.remove('hidden');
+                inlineViewer.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                decryptModal.classList.add('hidden');
+                alert('Decryption failed. Invalid passphrase or corrupted stream.');
+            }
+        }
+
+        function escapeHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        async function checkVaultStatus() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`${API_URL}?action=check_vault_pass&user=${encodeURIComponent(currentUser)}`);
+                const data = await res.json();
+                userHasVaultPass = data.has_vault_pass === true;
+                document.getElementById('vaultLockTitle').textContent = userHasVaultPass ? "Protected Account Vault" : "Create Vault Passphrase";
+                document.getElementById('vaultSubmitBtn').textContent = userHasVaultPass ? "Unlock" : "Set Password";
+            } catch (e) {}
+        }
+
+        async function handleVaultFormSubmit(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+            const pass = document.getElementById('vaultPassInput').value.trim();
+            const endpoint = userHasVaultPass ? 'verify_vault_pass' : 'set_vault_pass';
+            try {
+                const res = await fetch(`${API_URL}?action=${endpoint}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, vault_password: pass })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    vaultUnlocked = true; userHasVaultPass = true;
+                    document.getElementById('vaultLockOverlay').classList.add('hidden');
+                    document.getElementById('relockBtn').classList.remove('hidden');
+                    loadVaultInventory();
+                } else { document.getElementById('lockErrorText').classList.remove('hidden'); }
+            } catch (e) {}
+        }
+
+        function lockVault() {
+            vaultUnlocked = false;
+            document.getElementById('vaultLockOverlay').classList.remove('hidden');
+            document.getElementById('relockBtn').classList.add('hidden');
+            document.getElementById('vaultPassInput').value = '';
+            document.getElementById('mediaGrid').innerHTML = `<div class="col-span-full py-8 text-center text-zinc-500 text-xs font-mono">Vault locked.</div>`;
+            document.getElementById('vaultFileTable').innerHTML = `<tr><td colspan="4" class="py-6 text-center text-zinc-500">Vault locked.</td></tr>`;
+            closeInlineViewer();
+        }
+
+        async function loadVaultInventory() {
+            if (!currentUser || !vaultUnlocked) return;
+            try {
+                const res = await fetch(`${API_URL}?action=list&user=${encodeURIComponent(currentUser)}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    renderVaultFiles(data.files || []);
+                }
+            } catch (e) {}
+        }
+
+        async function renderVaultFiles(files) {
+            const table = document.getElementById('vaultFileTable');
+            const mediaGrid = document.getElementById('mediaGrid');
+            document.getElementById('mediaCountText').innerHTML = `<i class="fa-solid fa-photo-film text-white"></i> Encrypted Media Gallery (${files.length})`;
+
+            if (files.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-zinc-500">No items in vault.</td></tr>`;
+                mediaGrid.innerHTML = `<div class="col-span-full py-8 text-center text-zinc-500 text-xs font-mono">No items in vault.</div>`;
+                return;
+            }
+
+            table.innerHTML = files.map(f => `
+                <tr class="hover:bg-white/[0.02]">
+                    <td class="py-3 px-4 flex items-center gap-2 font-medium text-white"><i class="fa-solid fa-lock text-emerald-400 text-xs"></i><span class="truncate max-w-xs">${escapeHtml(f.name)}</span></td>
+                    <td class="py-3 px-4 text-zinc-400">${f.size} B</td>
+                    <td class="py-3 px-4 text-zinc-400">${f.date || 'N/A'}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="openDecryptedMediaModal('${f.url}', '${escapeHtml(f.name)}')" class="text-zinc-300 hover:text-white p-1" title="Decrypt & View"><i class="fa-solid fa-unlock-keyhole"></i></button>
+                        <button onclick="deleteVaultFile('${escapeHtml(f.name)}')" class="text-zinc-500 hover:text-red-400 p-1" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            let gridHtml = '';
+            for (let f of files) {
+                let thumbId = 'thumb_' + f.id;
+                gridHtml += `
+                    <div class="group relative rounded-xl overflow-hidden bg-black/80 border border-white/10 hover:border-emerald-500/50 transition shadow-lg aspect-square flex flex-col justify-between p-3 cursor-pointer" onclick="openDecryptedMediaModal('${f.url}', '${escapeHtml(f.name)}')">
+                        <div class="flex items-center justify-between z-10"><i class="fa-solid fa-lock text-emerald-400 text-xs"></i><span class="text-[8px] font-mono uppercase text-zinc-400 bg-black/60 px-1.5 py-0.5 rounded">ENCRYPTED</span></div>
+                        <div class="absolute inset-0 flex items-center justify-center pt-2 overflow-hidden" id="${thumbId}">
+                            <i class="fa-solid fa-file-shield text-3xl text-zinc-600 group-hover:text-emerald-400 transition"></i>
+                        </div>
+                        <div class="z-10 bg-black/70 backdrop-blur-sm -mx-3 -mb-3 p-2 border-t border-white/10 flex items-center justify-between">
+                            <div class="text-[11px] font-mono text-white truncate max-w-[120px]">${escapeHtml(f.name)}</div>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-zinc-400"></i>
+                        </div>
+                    </div>
+                `;
+            }
+            mediaGrid.innerHTML = gridHtml;
+
+            for (let f of files) {
+                let ext = getRealExtension(f.name);
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                    fetch(f.url)
+                        .then(r => r.arrayBuffer())
+                        .then(buf => decryptFileBuffer(buf))
+                        .then(decBuf => {
+                            let blob = new Blob([decBuf], { type: `image/${ext === 'jpg' ? 'jpeg' : ext}` });
+                            let blobUrl = URL.createObjectURL(blob);
+                            let container = document.getElementById('thumb_' + f.id);
+                            if (container) {
+                                container.innerHTML = `<img src="${blobUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">`;
+                            }
+                        })
+                        .catch(e => {});
+                }
+            }
+        }
+
+        function triggerFileUpload() { if (!vaultUnlocked) { alert('Unlock vault first.'); return; } document.getElementById('vaultFileInput').click(); }
+        function triggerMediaUpload() { if (!vaultUnlocked) { alert('Unlock vault first.'); return; } document.getElementById('mediaFileInput').click(); }
+
+        async function handleVaultUpload(files) {
+            if (!files || files.length === 0 || !vaultUnlocked) return;
+            const file = files[0];
+            const buffer = await file.arrayBuffer();
+
+            const encModal = document.getElementById('encryptModal');
+            const progressBar = document.getElementById('encryptProgressBar');
+            const progressPercent = document.getElementById('encryptProgressPercent');
+            const fileLabel = document.getElementById('encryptFileName');
+
+            encModal.classList.remove('hidden');
+            fileLabel.textContent = file.name;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+
+            const encryptedBuffer = await encryptFileBuffer(buffer, (pct, statusText) => {
+                progressBar.style.width = pct + '%';
+                progressPercent.textContent = pct + '%';
+                document.getElementById('encryptStatusTitle').textContent = statusText;
+            });
+
+            const encName = file.name.endsWith('.enc') ? file.name : file.name + '.enc';
+            const formData = new FormData();
+            formData.append('file', new File([encryptedBuffer], encName, { type: 'application/octet-stream' }));
+
+            fetch(`${API_URL}?action=upload&user=${encodeURIComponent(currentUser)}`, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    encModal.classList.add('hidden');
+                    if (data.status === 'success') loadVaultInventory();
+                    else alert(data.message || 'Upload failed');
+                })
+                .catch(err => {
+                    encModal.classList.add('hidden');
+                    alert('Server connection error during upload.');
+                });
+        }
+
+        async function deleteVaultFile(fileName) {
+            if (!currentUser || !confirm(`Delete "${fileName}"?`)) return;
+            try {
+                const res = await fetch(`${API_URL}?action=delete&user=${encodeURIComponent(currentUser)}&file=${encodeURIComponent(fileName)}`);
+                if ((await res.json()).status === 'success') loadVaultInventory();
+            } catch (e) {}
+        }
+
+        function closeInlineViewer() {
+            document.getElementById('inlineViewerSection').classList.add('hidden');
+            document.getElementById('inlineViewerContainer').innerHTML = '';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userAccountBadge').textContent = currentUser;
+            checkVaultStatus();
+        });
+    </script>
+</body>
+</html>

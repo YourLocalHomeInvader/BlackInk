@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Black Ink Network | Secure Communications Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #050507; color: #e4e4e7; font-family: system-ui, -apple-system, sans-serif; }
+        .glass-panel { background: rgba(12, 12, 16, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #050507; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col antialiased overflow-hidden">
+
+    <header class="border-b border-white/10 bg-black/80 backdrop-blur-xl h-16 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="text-zinc-400 hover:text-white transition flex items-center gap-2 text-xs font-mono pr-2 border-r border-white/10">
+                    <i class="fa-solid fa-arrow-left"></i> Dashboard
+                </a>
+                <div class="h-8 w-8 rounded-lg bg-black border border-white/20 flex flex-col items-center justify-center">
+                    <span class="font-black text-white text-[10px]">BIN</span>
+                </div>
+                <h1 class="font-bold text-white text-sm tracking-wider flex items-center gap-2">
+                    COMMUNICATIONS HUB
+                    <span class="text-[8px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AES-GCM SECURED</span>
+                </h1>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button id="adminReportsBtn" onclick="openReportsModal()" class="hidden relative text-xs font-mono bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg transition items-center gap-2">
+                    <i class="fa-solid fa-flag"></i><span>View Reports</span>
+                    <span id="unreadReportsBadge" class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono animate-bounce">0</span>
+                </button>
+                <div class="flex items-center space-x-2 text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span id="userAccountBadge">--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex gap-4 overflow-hidden">
+        <!-- SIDEBAR CHANNELS & DMS -->
+        <div class="w-72 glass-panel rounded-2xl p-4 flex flex-col space-y-4 shrink-0">
+            <div>
+                <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2 px-1">Channels</div>
+                <button onclick="switchChat('rules')" id="sidebar-btn-rules" class="w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition text-zinc-400 hover:text-white hover:bg-white/5 flex items-center gap-2 mb-1">
+                    <i class="fa-solid fa-scroll text-amber-400"></i> Rules & Guidelines
+                </button>
+                <button onclick="switchChat('general')" id="sidebar-btn-general" class="w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition bg-white/10 text-white font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-hashtag text-zinc-400"></i> General Channel
+                </button>
+            </div>
+
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2 px-1">Direct Messages</div>
+                <div class="relative mb-2">
+                    <input type="text" id="userSearchInput" oninput="liveSearchUsers(this.value)" placeholder="Search user..." class="w-full bg-zinc-900/80 border border-white/10 rounded-lg pl-7 pr-2 py-1.5 text-[11px] text-white font-mono focus:outline-none">
+                    <i class="fa-solid fa-magnifying-glass text-[10px] text-zinc-500 absolute left-2.5 top-2.5"></i>
+                </div>
+                <div id="dmUserList" class="space-y-1 overflow-y-auto flex-1 pr-1"></div>
+            </div>
+        </div>
+
+        <!-- MAIN MESSAGES CHAT AREA -->
+        <div class="flex-1 glass-panel rounded-2xl flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-white/10 flex items-center justify-between bg-zinc-950/40">
+                <span id="activeChatTitle" class="text-xs font-mono font-bold text-white uppercase tracking-wider"># General Channel</span>
+                <button id="clearGeneralBtn" onclick="clearGeneralChat()" class="hidden text-[10px] font-mono bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg transition items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Clear Chat
+                </button>
+            </div>
+
+            <!-- INLINE VIEWER WORKSPACE FOR ATTACHMENTS -->
+            <div id="inlineViewerSection" class="hidden p-4 border-b border-white/10 bg-black/60">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-unlock-keyhole text-emerald-400"></i>
+                        <h3 class="font-bold text-white text-xs font-mono" id="inlineViewerTitle">Decrypted View Workspace</h3>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <a id="inlineDownloadBtn" href="" download class="text-[11px] font-mono bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg border border-white/10 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> Download File
+                        </a>
+                        <button onclick="closeInlineViewer()" class="text-zinc-400 hover:text-white p-1" title="Close Workspace"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="w-full max-h-[40vh] flex items-center justify-center bg-zinc-950/80 rounded-xl overflow-hidden p-2" id="inlineViewerContainer"></div>
+            </div>
+
+            <div id="messagesContainer" class="flex-1 space-y-3 overflow-y-auto p-4"></div>
+
+            <div id="messageFormContainer" class="p-4 border-t border-white/10 bg-zinc-950/40">
+                <form onsubmit="postMessage(event)" class="flex gap-2 items-center" id="chatInputForm">
+                    <button type="button" onclick="openChatMediaModal()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl transition text-xs font-mono flex items-center gap-1.5 shrink-0 border border-white/10" title="Attach Media"><i class="fa-solid fa-paperclip text-sm"></i></button>
+                    <input type="text" id="messageInput" placeholder="Type encrypted message..." class="flex-1 min-w-0 bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none font-mono">
+                    <button type="submit" class="bg-white hover:bg-zinc-200 text-black px-4 py-2 rounded-xl transition text-sm font-semibold shrink-0">Send</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- DECRYPT PROGRESS MODAL -->
+    <div id="decryptModal" class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-6 text-center space-y-4 shadow-2xl border border-white/20">
+            <div class="h-12 w-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400">
+                <i class="fa-solid fa-unlock-keyhole text-lg animate-pulse"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-sm mb-1" id="decryptStatusTitle">Decrypting Attachment...</h3>
+                <p class="text-xs text-zinc-400 font-mono truncate" id="decryptFileName">Processing stream</p>
+            </div>
+            <div class="w-full bg-zinc-900 rounded-full h-2.5 overflow-hidden border border-white/10">
+                <div id="decryptProgressBar" class="bg-emerald-400 h-2.5 rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div class="text-[11px] font-mono text-zinc-400" id="decryptProgressPercent">0%</div>
+        </div>
+    </div>
+
+    <!-- REPORT MODAL -->
+    <div id="reportModal" class="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-md w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-flag text-red-400"></i> Report User: <span id="reportTargetName" class="text-emerald-400"></span></h3>
+                <button onclick="closeReportModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitUserReport(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-zinc-400 mb-1">Enter details why you are reporting this user:</label>
+                    <textarea id="reportDetailsInput" rows="4" required placeholder="Describe violation details..." class="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none font-mono"></textarea>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeReportModal()" class="bg-white/10 hover:bg-white/20 text-zinc-300 px-4 py-2 rounded-xl text-xs font-semibold">Cancel</button>
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN VIEW REPORTS MODAL -->
+    <div id="adminReportsModal" class="fixed inset-0 z-[75] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-2xl w-full rounded-2xl p-6 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-flag text-amber-400"></i> User Reports Queue</h3>
+                <button onclick="closeReportsModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="adminReportsList" class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <div class="text-center py-8 text-zinc-500 font-mono text-xs">Loading reports...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN DM TRANSCRIPT INSPECTION MODAL -->
+    <div id="adminDmTranscriptModal" class="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-xl w-full rounded-2xl p-6 space-y-4 shadow-2xl max-h-[85vh] flex flex-col border border-emerald-500/30">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-comments text-emerald-400"></i> DM Transcript: <span id="transcriptUsersLabel" class="text-emerald-300 font-mono"></span></h3>
+                <button onclick="closeAdminDmTranscriptModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="adminDmTranscriptContainer" class="flex-1 overflow-y-auto space-y-3 pr-1 py-2 max-h-[55vh]">
+                <div class="text-center py-8 text-zinc-500 font-mono text-xs">Loading transcript...</div>
+            </div>
+            <div class="pt-2 border-t border-white/15 flex justify-end">
+                <button onclick="closeAdminDmTranscriptModal()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Close Inspector</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ATTACHMENT MODAL -->
+    <div id="chatMediaModal" class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-sm w-full rounded-2xl p-6 space-y-4 shadow-2xl text-center">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-paperclip text-zinc-400"></i> Send Encrypted Attachment</h3>
+                <button onclick="closeChatMediaModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="py-4">
+                <button onclick="triggerDirectChatUpload()" class="w-full bg-white hover:bg-zinc-200 text-black font-semibold text-xs py-3 rounded-xl transition flex items-center justify-center gap-2 shadow">
+                    <i class="fa-solid fa-file-arrow-up"></i> Choose File from Computer
+                </button>
+                <input type="file" id="directChatFileInput" accept="image/*,video/*,.pdf,.zip" class="hidden" onchange="handleDirectChatUpload(this.files)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_SECRET = "BIN_SECURE_KEY_2026_!@#$";
+        const API_URL = 'api.php';
+        let currentUser = localStorage.getItem('bin_active_user');
+        let activeChat = 'rules';
+        let messages = [];
+        let serverUsers = {};
+        let adminUsersData = {};
+        let bannedIpList = [];
+        let unreadCounts = {};
+        let reportingTargetUser = null;
+        let lastSeenReportCount = 0;
+
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        }
+
+        function playNotificationChime() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } catch (e) {}
+        }
+
+        async function getKey() {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey("raw", enc.encode(MASTER_SECRET), { name: "PBKDF2" }, false, ["deriveKey"]);
+            return window.crypto.subtle.deriveKey({ name: "PBKDF2", salt: enc.encode("bin_salt_value"), iterations: 100000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+        }
+
+        async function encryptText(text) {
+            try {
+                const key = await getKey();
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const ciphertext = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, new TextEncoder().encode(text));
+                return { ciphertext: Array.from(new Uint8Array(ciphertext)).map(b => String.fromCharCode(b)).join(''), iv: Array.from(iv).map(b => String.fromCharCode(b)).join('') };
+            } catch (e) { return { ciphertext: text, iv: '' }; }
+        }
+
+        async function decryptText(ciphertext, ivStr) {
+            if (!ivStr || !ciphertext) return ciphertext;
+            try {
+                const key = await getKey();
+                const iv = new Uint8Array(ivStr.split('').map(c => c.charCodeAt(0)));
+                const data = new Uint8Array(ciphertext.split('').map(c => c.charCodeAt(0)));
+                return new TextDecoder().decode(await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, data));
+            } catch (e) { return "[Encrypted Payload]"; }
+        }
+
+        async function encryptFileBuffer(arrayBuffer) {
+            const key = await getKey();
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const encryptedContent = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, arrayBuffer);
+            const ivLen = iv.byteLength;
+            const combined = new Uint8Array(4 + ivLen + encryptedContent.byteLength);
+            new DataView(combined.buffer).setUint32(0, ivLen, true);
+            combined.set(iv, 4);
+            combined.set(new Uint8Array(encryptedContent), 4 + ivLen);
+            return combined.buffer;
+        }
+
+        async function decryptFileBuffer(arrayBuffer, onProgress) {
+            if (onProgress) onProgress(20, "Deriving decryption keys...");
+            const key = await getKey();
+            if (onProgress) onProgress(50, "Parsing cipher blocks...");
+            const view = new DataView(arrayBuffer);
+            const ivLen = view.getUint32(0, true);
+            const iv = new Uint8Array(arrayBuffer, 4, ivLen);
+            const ciphertext = new Uint8Array(arrayBuffer, 4 + ivLen);
+            if (onProgress) onProgress(80, "Unlocking payload stream...");
+            const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
+            if (onProgress) onProgress(100, "Decryption complete!");
+            return decrypted;
+        }
+
+        function getRealExtension(filename) {
+            let clean = filename.toLowerCase();
+            if (clean.endsWith('.enc')) clean = clean.slice(0, -4);
+            return clean.split('.').pop();
+        }
+
+        function escapeHtml(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        async function decryptAndOpenAttachment(fileUrl, fileName) {
+            const decryptModal = document.getElementById('decryptModal');
+            const progressBar = document.getElementById('decryptProgressBar');
+            const progressPercent = document.getElementById('decryptProgressPercent');
+            const fileLabel = document.getElementById('decryptFileName');
+
+            decryptModal.classList.remove('hidden');
+            fileLabel.textContent = fileName;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+
+            try {
+                const response = await fetch(fileUrl);
+                const arrayBuffer = await response.arrayBuffer();
+
+                const decryptedBuffer = await decryptFileBuffer(arrayBuffer, (pct, statusText) => {
+                    progressBar.style.width = pct + '%';
+                    progressPercent.textContent = pct + '%';
+                    document.getElementById('decryptStatusTitle').textContent = statusText;
+                });
+
+                decryptModal.classList.add('hidden');
+
+                const ext = getRealExtension(fileName);
+                let mimeType = 'application/octet-stream';
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+                else if (['mp4', 'webm', 'ogg'].includes(ext)) mimeType = `video/${ext}`;
+                else if (ext === 'pdf') mimeType = 'application/pdf';
+
+                const blob = new Blob([decryptedBuffer], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+
+                const inlineViewer = document.getElementById('inlineViewerSection');
+                const container = document.getElementById('inlineViewerContainer');
+                document.getElementById('inlineViewerTitle').textContent = `Decrypted Workspace: ${fileName}`;
+                document.getElementById('inlineDownloadBtn').href = blobUrl;
+                document.getElementById('inlineDownloadBtn').download = fileName.endsWith('.enc') ? fileName.slice(0, -4) : fileName;
+
+                if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+                    container.innerHTML = `<img src="${blobUrl}" class="max-h-[35vh] rounded-lg shadow-xl object-contain">`;
+                } else if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                    container.innerHTML = `<video controls autoplay class="max-h-[35vh] rounded-lg shadow-xl"><source src="${blobUrl}" type="${mimeType}"></video>`;
+                } else if (ext === 'pdf') {
+                    container.innerHTML = `<iframe src="${blobUrl}" class="w-full h-[35vh] rounded-lg border border-white/10"></iframe>`;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-6 space-y-3 font-mono">
+                            <i class="fa-solid fa-file-shield text-3xl text-emerald-400"></i>
+                            <p class="text-xs text-zinc-300">File decrypted successfully. Click download above to save.</p>
+                        </div>
+                    `;
+                }
+                inlineViewer.classList.remove('hidden');
+                inlineViewer.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                decryptModal.classList.add('hidden');
+                alert('Decryption failed. Invalid passphrase or corrupted stream.');
+            }
+        }
+
+        function closeInlineViewer() {
+            document.getElementById('inlineViewerSection').classList.add('hidden');
+            document.getElementById('inlineViewerContainer').innerHTML = '';
+        }
+
+        async function fetchAdminData() {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            try {
+                const res = await fetch(`${API_URL}?action=admin_get_users&requester=${encodeURIComponent(currentUser)}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    adminUsersData = data.users_data || {};
+                    bannedIpList = data.banned_ips || [];
+                    liveSearchUsers('');
+                }
+            } catch (e) {}
+        }
+
+        async function fetchUnreadReportsCount() {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            try {
+                const res = await fetch(`${API_URL}?action=get_unread_report_count&requester=${encodeURIComponent(currentUser)}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const count = data.count || 0;
+                    const badge = document.getElementById('unreadReportsBadge');
+                    if (lastSeenReportCount > 0 && count > lastSeenReportCount) {
+                        playNotificationChime();
+                    }
+                    lastSeenReportCount = count;
+                    if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
+                    else { badge.classList.add('hidden'); }
+                }
+            } catch (e) {}
+        }
+
+        async function adminManageBan(targetUser, targetIp, banAction) {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            try {
+                const res = await fetch(`${API_URL}?action=admin_manage_ban`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester: currentUser, target_user: targetUser, target_ip: targetIp, ban_action: banAction })
+                });
+                const data = await res.json();
+                if (data.status === 'success') { fetchAdminData(); fetchServerUsers(); }
+                else { alert(data.message || 'Action failed'); }
+            } catch (e) { alert('Connection error'); }
+        }
+
+        async function fetchServerUsers() {
+            try {
+                const res = await fetch(`${API_URL}?action=get_users`);
+                const data = await res.json();
+                if (data.status === 'success') { serverUsers = data.users || {}; liveSearchUsers(''); }
+            } catch (e) {}
+        }
+
+        function liveSearchUsers(query) {
+            const listEl = document.getElementById('dmUserList');
+            if (!listEl) return;
+            query = query.toLowerCase().trim();
+            const userNames = Object.keys(serverUsers);
+            const displayUsers = userNames.filter(u => u !== currentUser && (query === '' || u.toLowerCase().includes(query)));
+            
+            if (displayUsers.length === 0) {
+                listEl.innerHTML = `<div class="text-[10px] text-zinc-600 font-mono px-1 py-2">No other users found.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = displayUsers.map(u => {
+                let userInfo = serverUsers[u] || {};
+                let isBanned = userInfo.is_banned === true;
+                let bannedTag = isBanned ? `<span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-red-500/20 text-red-400 border border-red-500/30 uppercase">BANNED</span>` : '';
+                let unreadCount = unreadCounts[u] || 0;
+                let unreadBadge = unreadCount > 0 ? `<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full font-mono">${unreadCount}</span>` : '';
+
+                let extraInfo = '';
+                let shieldIcon = u === 'YourLocalHomeInvader' ? `<i class="fa-solid fa-shield text-emerald-400 text-[10px]" title="Admin"></i>` : '';
+                let banControls = '';
+                let flagButton = `<button onclick="openReportModal('${escapeHtml(u)}')" class="text-zinc-400 hover:text-red-400 px-1.5 py-0.5 text-xs transition" title="Report User"><i class="fa-solid fa-flag"></i></button>`;
+
+                if (currentUser === 'YourLocalHomeInvader') {
+                    let adminInfo = adminUsersData[u] || {};
+                    let userIps = (adminInfo.ips && adminInfo.ips.length > 0) ? adminInfo.ips.join(', ') : 'No IP recorded';
+                    let ipIsBanned = adminInfo.ips && adminInfo.ips.some(ip => bannedIpList.includes(ip));
+
+                    extraInfo = `<div class="text-[9px] text-emerald-400/80 font-mono truncate">IP: ${escapeHtml(userIps)}</div>`;
+                    let userBanBtn = isBanned 
+                        ? `<button onclick="adminManageBan('${escapeHtml(u)}', '', 'unban_user')" class="text-[9px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">Unban User</button>`
+                        : `<button onclick="adminManageBan('${escapeHtml(u)}', '', 'ban_user')" class="text-[9px] bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2 py-0.5 rounded border border-red-500/30">Ban User</button>`;
+
+                    let ipBanBtn = (adminInfo.ips && adminInfo.ips.length > 0) ? (
+                        ipIsBanned 
+                            ? `<button onclick="adminManageBan('', '${adminInfo.ips[0]}', 'unban_ip')" class="text-[9px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">Unban IP</button>`
+                            : `<button onclick="adminManageBan('', '${adminInfo.ips[0]}', 'ban_ip')" class="text-[9px] bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2 py-0.5 rounded border border-red-500/30">Ban IP</button>`
+                    ) : '';
+
+                    banControls = `
+                        <div class="flex items-center gap-1.5 mt-1 pt-1 border-t border-white/5">
+                            ${userBanBtn}
+                            ${ipBanBtn}
+                            ${ipIsBanned ? '<span class="text-[8px] font-mono text-red-400">[IP BANNED]</span>' : ''}
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="group flex flex-col rounded-xl hover:bg-white/5 transition px-2 py-2 mb-1 border border-white/5">
+                        <div class="flex items-center justify-between truncate">
+                            <button onclick="switchChat('${escapeHtml(u)}')" class="text-xs font-mono transition text-zinc-300 hover:text-white flex items-center gap-1.5 truncate">
+                                <i class="fa-solid fa-user text-[10px] text-zinc-500"></i> ${escapeHtml(u)}
+                                ${bannedTag}
+                            </button>
+                            <div class="flex items-center gap-1.5">
+                                ${unreadBadge}
+                                ${shieldIcon}
+                                ${flagButton}
+                            </div>
+                        </div>
+                        ${extraInfo}
+                        ${banControls}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchChat(target) {
+            activeChat = target;
+            document.getElementById('sidebar-btn-rules').className = "w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition text-zinc-400 hover:text-white hover:bg-white/5 flex items-center gap-2 mb-1";
+            document.getElementById('sidebar-btn-general').className = "w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition text-zinc-400 hover:text-white hover:bg-white/5 flex items-center gap-2";
+
+            if (target === 'rules') {
+                document.getElementById('sidebar-btn-rules').className = "w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition bg-white/10 text-white font-semibold flex items-center gap-2 mb-1";
+                document.getElementById('activeChatTitle').textContent = '📜 Network Rules & Guidelines';
+            } else if (target === 'general') {
+                document.getElementById('sidebar-btn-general').className = "w-full text-left px-3 py-2 rounded-xl text-xs font-mono transition bg-white/10 text-white font-semibold flex items-center gap-2";
+                document.getElementById('activeChatTitle').textContent = '# General Channel';
+            } else {
+                document.getElementById('activeChatTitle').textContent = `@ ${target} (Direct Message)`;
+            }
+
+            const clearBtn = document.getElementById('clearGeneralBtn');
+            if (target === 'general' && currentUser === 'YourLocalHomeInvader') {
+                clearBtn.classList.remove('hidden');
+                clearBtn.classList.add('flex');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            const formContainer = document.getElementById('messageFormContainer');
+            if (target === 'rules') {
+                formContainer.innerHTML = `
+                    <div class="text-center text-xs font-mono text-zinc-500 py-2 bg-zinc-950/40 rounded-xl">
+                        🔒 <span class="text-amber-400 font-semibold">Read-Only Channel</span> — Only administrators can post guidelines.
+                    </div>
+                `;
+            } else {
+                formContainer.innerHTML = `
+                    <form onsubmit="postMessage(event)" class="flex gap-2 items-center" id="chatInputForm">
+                        <button type="button" onclick="openChatMediaModal()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl transition text-xs font-mono flex items-center gap-1.5 shrink-0 border border-white/10" title="Attach Media"><i class="fa-solid fa-paperclip text-sm"></i></button>
+                        <input type="text" id="messageInput" placeholder="Type encrypted message..." class="flex-1 min-w-0 bg-zinc-900 border border-white/10 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none font-mono">
+                        <button type="submit" class="bg-white hover:bg-zinc-200 text-black px-4 py-2 rounded-xl transition text-sm font-semibold shrink-0">Send</button>
+                    </form>
+                `;
+            }
+
+            renderMessages();
+        }
+
+        async function fetchMessages() {
+            try {
+                const res = await fetch(`${API_URL}?action=get_messages`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    messages = data.messages || [];
+                    renderMessages();
+                    if (currentUser === 'YourLocalHomeInvader') {
+                        fetchUnreadReportsCount();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function postMessage(e, mediaPayload = null) {
+            if (e) e.preventDefault();
+            if (activeChat === 'rules') { alert('The rules channel is read-only.'); return; }
+            const input = document.getElementById('messageInput');
+            const text = input ? input.value.trim() : '';
+            if (!text && !mediaPayload) return;
+
+            const encrypted = await encryptText(text || '');
+            const payload = {
+                sender: currentUser,
+                recipient: activeChat,
+                ciphertext: encrypted.ciphertext,
+                iv: encrypted.iv,
+                media_url: mediaPayload ? mediaPayload.url : null,
+                media_type: mediaPayload ? mediaPayload.type : null,
+                media_name: mediaPayload ? mediaPayload.name : null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}?action=post_message`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.status === 'success') { if (input) input.value = ''; fetchMessages(); }
+            } catch (e) {}
+        }
+
+        async function handleDirectChatUpload(files) {
+            if (!files || files.length === 0) return;
+            const file = files[0];
+            closeChatMediaModal();
+
+            const buffer = await file.arrayBuffer();
+            const encryptedBuffer = await encryptFileBuffer(buffer);
+            const encName = file.name.endsWith('.enc') ? file.name : file.name + '.enc';
+            const formData = new FormData();
+            formData.append('file', new File([encryptedBuffer], encName, { type: 'application/octet-stream' }));
+
+            try {
+                const res = await fetch(`${API_URL}?action=chat_upload`, { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status === 'success' && data.url) {
+                    await postMessage(null, {
+                        url: data.url,
+                        name: file.name,
+                        type: file.type || 'application/octet-stream'
+                    });
+                } else {
+                    alert(data.message || 'Upload failed.');
+                }
+            } catch (e) {
+                alert('Connection error during upload.');
+            }
+        }
+
+        async function deleteMessage(msgIndex) {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`${API_URL}?action=delete_message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester: currentUser, msg_index: msgIndex })
+                });
+                const data = await res.json();
+                if (data.status === 'success') fetchMessages();
+            } catch (e) {}
+        }
+
+        async function clearGeneralChat() {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            if (!confirm('Are you sure you want to clear all messages in General?')) return;
+            try {
+                const res = await fetch(`${API_URL}?action=delete_message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester: currentUser, clear_general: true })
+                });
+                const data = await res.json();
+                if (data.status === 'success') fetchMessages();
+            } catch (e) {}
+        }
+
+        async function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            if (activeChat === 'rules') {
+                container.innerHTML = `
+                    <div class="space-y-4 py-2 px-1">
+                        <div class="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl space-y-2">
+                            <div class="flex items-center space-x-2 text-amber-400 font-bold text-sm">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span>Black Ink Network — Official Code of Conduct</span>
+                            </div>
+                            <p class="text-xs text-zinc-300 font-mono leading-relaxed">
+                                Welcome to BIN. All users are expected to adhere strictly to the network standards outlined below to maintain system security and integrity.
+                            </p>
+                        </div>
+
+                        <div class="space-y-2 font-mono text-xs">
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1">
+                                <div class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-ban text-red-400"></i> 1. No Illegal Activity</div>
+                                <p class="text-zinc-400">Sharing, distributing, or linking to illegal content, malware, carding tools, exploits, or unauthorized data breaches is strictly prohibited and will result in an immediate IP & account ban.</p>
+                            </div>
+
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1">
+                                <div class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-comment-slash text-amber-400"></i> 2. No Spam or Flooding</div>
+                                <p class="text-zinc-400">Do not spam channels, flood direct messages, or send repetitive automated scripts/payloads that degrade network or endpoint performance.</p>
+                            </div>
+
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1">
+                                <div class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-shield text-emerald-400"></i> 3. Respect Network Security</div>
+                                <p class="text-zinc-400">Do not attempt to bypass encryption layers, target administrative endpoints, or disrupt active peer sessions.</p>
+                            </div>
+
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1">
+                                <div class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-400"></i> 4. Use the Reporting Tool</div>
+                                <p class="text-zinc-400">If you encounter suspicious behavior or policy violations, use the flag button next to a user in your DM list to report them directly to administration.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            let hasMessages = false;
+
+            for (let i = 0; i < messages.length; i++) {
+                let m = messages[i];
+                let rec = m.recipient || 'general';
+                let matches = activeChat === 'general' ? (rec === 'general') : ((m.sender === currentUser && rec === activeChat) || (m.sender === activeChat && rec === currentUser));
+
+                if (matches) {
+                    hasMessages = true;
+                    let decryptedText = await decryptText(m.ciphertext, m.iv);
+                    let canDelete = currentUser && (currentUser === 'YourLocalHomeInvader' || currentUser === m.sender);
+                    let deleteBtn = canDelete ? `<button onclick="deleteMessage(${i})" class="text-zinc-500 hover:text-red-400 transition p-1 text-xs" title="Delete Message"><i class="fa-solid fa-trash"></i></button>` : '';
+
+                    let mediaHtml = '';
+                    if (m.media_url) {
+                        mediaHtml = `
+                            <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between bg-black/40 p-2 rounded-lg">
+                                <span class="text-emerald-400 text-[11px] font-mono flex items-center gap-1.5 truncate"><i class="fa-solid fa-lock text-xs"></i> ${escapeHtml(m.media_name || 'Encrypted Attachment')}</span>
+                                <button onclick="decryptAndOpenAttachment('${m.media_url}', '${escapeHtml(m.media_name || 'file.enc')}')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-md transition font-mono flex items-center gap-1">
+                                    <i class="fa-solid fa-unlock-keyhole text-[10px]"></i> Decrypt & View
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                        <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-2">
+                            <div class="flex items-center justify-between text-[10px] font-mono">
+                                <span class="font-bold text-white flex items-center gap-1.5">
+                                    ${escapeHtml(m.sender)}
+                                    ${m.sender === 'YourLocalHomeInvader' ? '<i class="fa-solid fa-shield text-emerald-400 text-[9px]" title="Admin"></i>' : ''}
+                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-zinc-500">${m.time}</span>
+                                    ${deleteBtn}
+                                </div>
+                            </div>
+                            <p class="text-xs text-zinc-300 font-mono">${escapeHtml(decryptedText)}</p>
+                            ${mediaHtml}
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = hasMessages ? html : `<p class="text-xs text-zinc-500 font-mono text-center py-10">No messages in this chat. Secure channel ready.</p>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function openReportModal(target) { reportingTargetUser = target; document.getElementById('reportTargetName').textContent = target; document.getElementById('reportModal').classList.remove('hidden'); }
+        function closeReportModal() { document.getElementById('reportModal').classList.add('hidden'); }
+        function openChatMediaModal() { document.getElementById('chatMediaModal').classList.remove('hidden'); }
+        function closeChatMediaModal() { document.getElementById('chatMediaModal').classList.add('hidden'); }
+        function triggerDirectChatUpload() { document.getElementById('directChatFileInput').click(); }
+
+        async function submitUserReport(e) {
+            e.preventDefault();
+            const details = document.getElementById('reportDetailsInput').value.trim();
+            if (!details || !reportingTargetUser) return;
+            try {
+                const res = await fetch(`${API_URL}?action=submit_report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reporter: currentUser, reported_user: reportingTargetUser, details: details })
+                });
+                const data = await res.json();
+                if (data.status === 'success') { alert('Report submitted successfully.'); closeReportModal(); }
+            } catch (e) {}
+        }
+
+        async function openReportsModal() {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            document.getElementById('adminReportsModal').classList.remove('hidden');
+            const listEl = document.getElementById('adminReportsList');
+            listEl.innerHTML = `<div class="text-center py-8 text-zinc-500 font-mono text-xs">Loading reports...</div>`;
+
+            try {
+                await fetch(`${API_URL}?action=admin_mark_reports_read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester: currentUser })
+                });
+                lastSeenReportCount = 0;
+                fetchUnreadReportsCount();
+
+                const res = await fetch(`${API_URL}?action=admin_get_reports&requester=${encodeURIComponent(currentUser)}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const reports = data.reports || [];
+                    if (reports.length === 0) {
+                        listEl.innerHTML = `<div class="text-center py-8 text-zinc-500 font-mono text-xs">No user reports found.</div>`;
+                        return;
+                    }
+                    listEl.innerHTML = reports.map((r, idx) => `
+                        <div class="bg-white/5 border border-white/10 p-3.5 rounded-xl space-y-2 font-mono text-xs relative">
+                            <div class="flex items-center justify-between text-zinc-400 border-b border-white/5 pb-1.5">
+                                <span>Reporter: <strong class="text-white">${escapeHtml(r.reporter)}</strong> vs Reported: <strong class="text-red-400">${escapeHtml(r.reported_user)}</strong></span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[10px] text-zinc-500">${r.time}</span>
+                                    <button onclick="deleteReport(${idx})" class="text-zinc-500 hover:text-red-400 transition" title="Delete Report"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="text-zinc-300"><strong>Reason/Details:</strong> ${escapeHtml(r.details)}</div>
+                            <div class="pt-2 flex justify-end">
+                                <button onclick="inspectDmTranscript('${escapeHtml(r.reporter)}', '${escapeHtml(r.reported_user)}')" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 text-[11px]">
+                                    <i class="fa-solid fa-comments"></i> Inspect DM Transcript
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {}
+        }
+
+        async function deleteReport(reportIndex) {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            if (!confirm('Are you sure you want to delete this report?')) return;
+            try {
+                const res = await fetch(`${API_URL}?action=admin_delete_report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester: currentUser, report_index: reportIndex })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    openReportsModal();
+                } else {
+                    alert(data.message || 'Failed to delete report');
+                }
+            } catch (e) {
+                alert('Connection error');
+            }
+        }
+
+        async function inspectDmTranscript(userA, userB) {
+            if (currentUser !== 'YourLocalHomeInvader') return;
+            document.getElementById('transcriptUsersLabel').textContent = `${userA} ↔ ${userB}`;
+            document.getElementById('adminDmTranscriptModal').classList.remove('hidden');
+            const container = document.getElementById('adminDmTranscriptContainer');
+            container.innerHTML = `<div class="text-center py-8 text-zinc-500 font-mono text-xs">Loading transcript...</div>`;
+
+            try {
+                const res = await fetch(`${API_URL}?action=admin_get_dm_transcript&requester=${encodeURIComponent(currentUser)}&user_a=${encodeURIComponent(userA)}&user_b=${encodeURIComponent(userB)}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const transcript = data.transcript || [];
+                    if (transcript.length === 0) {
+                        container.innerHTML = `<div class="text-center py-8 text-zinc-500 font-mono text-xs">No direct messages found between these users.</div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    for (let m of transcript) {
+                        let decryptedText = await decryptText(m.ciphertext, m.iv);
+                        let mediaInfo = m.media_url ? `
+                            <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between bg-black/40 p-2 rounded-lg">
+                                <span class="text-emerald-400 text-[11px] font-mono flex items-center gap-1.5 truncate"><i class="fa-solid fa-lock text-xs"></i> ${escapeHtml(m.media_name || 'Encrypted Attachment')}</span>
+                                <button onclick="decryptAndOpenAttachment('${m.media_url}', '${escapeHtml(m.media_name || 'file.enc')}')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-md transition font-mono flex items-center gap-1">
+                                    <i class="fa-solid fa-unlock-keyhole text-[10px]"></i> Decrypt & View
+                                </button>
+                            </div>
+                        ` : '';
+                        html += `
+                            <div class="bg-white/5 border border-white/10 p-3 rounded-xl space-y-1 font-mono text-xs">
+                                <div class="flex items-center justify-between text-[10px] text-zinc-500 border-b border-white/5 pb-1">
+                                    <span class="font-bold text-white">${escapeHtml(m.sender)}</span>
+                                    <span>${m.time}</span>
+                                </div>
+                                <p class="text-zinc-200">${escapeHtml(decryptedText)}</p>
+                                ${mediaInfo}
+                            </div>
+                        `;
+                    }
+                    container.innerHTML = html;
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="text-center py-8 text-red-400 font-mono text-xs">Failed to load DM transcript.</div>`;
+            }
+        }
+
+        function closeReportsModal() { document.getElementById('adminReportsModal').classList.add('hidden'); }
+        function closeAdminDmTranscriptModal() { document.getElementById('adminDmTranscriptModal').classList.add('hidden'); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userAccountBadge').textContent = currentUser;
+            if (currentUser === 'YourLocalHomeInvader') {
+                document.getElementById('adminReportsBtn').classList.remove('hidden');
+                fetchAdminData();
+                fetchUnreadReportsCount();
+            }
+            fetchServerUsers();
+            fetchMessages();
+            switchChat('rules');
+            setInterval(() => {
+                fetchMessages();
+                if (currentUser === 'YourLocalHomeInvader') fetchAdminData();
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
