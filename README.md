@@ -1,6 +1,6 @@
 # Black Ink Network (BIN)
 
-This is a project I was working on for a few weeks cause i was bored lmaooo; it's basically a website with encryption and messaging. I put example endpoints and photos and videos in the admin account (`User: YourLocalHomeInvader` | `Password: Bubba138#` | `Vault: Bubba138#`). I figure that someone might like this, or they are practicing breaking into shit lmao; it's not the best, but it's something lmaoo. I will not be updating this anymore. Whatever's under this is AI-generated, explaining what it does cause I don't feel like explaining 😂.
+This is a project I was working on for a few weeks cause i was bored lmaooo; it's basically a website with encryption and messaging. I put example endpoints and photos and videos in the admin account (`User: YourLocalHomeInvader` | `Password: Bubba138#` | `Vault: Bubba138#`). I figure that someone might like this, or they are practicing breaking into shit lmao; it's not the best, but it's something lmaoo. I will not be updating this anymore so you can download and modify it however you want to do it. Whatever's under this is AI-generated, explaining what it does cause I don't feel like explaining 😂.
 
 ---
 
